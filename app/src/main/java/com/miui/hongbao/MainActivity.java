@@ -97,7 +97,7 @@ public class MainActivity extends Activity {
     }
 
     public void openGithub(View view) {
-        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/geeeeeeeeek/WeChatLuckyMoney"));
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/captainpaolo/WeChatLuckyMoney"));
         startActivity(browserIntent);
     }
 }

@@ -65,7 +65,7 @@ public class HongbaoService extends AccessibilityService {
         switch (Stage.getInstance().getCurrentStage()) {
             case Stage.OPENING_STAGE:
                 // 调试信息，打印TTL
-                // Log.d("TTL", String.valueOf(ttl));
+                Log.d("TTL", String.valueOf(ttl));
 
                 /* 如果打开红包失败且还没到达最大尝试次数，重试 */
                 if (openHongbao(nodeInfo) == -1 && ttl < MAX_TTL) return;
@@ -98,7 +98,7 @@ public class HongbaoService extends AccessibilityService {
                         fetchedIdentifiers.add(id);
 
                         // 调试信息，在每次打开红包后打印出已经获取的红包
-                        // Log.d("fetched", Arrays.toString(fetchedIdentifiers.toArray()));
+                        Log.d("fetched", Arrays.toString(fetchedIdentifiers.toArray()));
 
                         Stage.getInstance().entering(Stage.OPENING_STAGE);
                         node.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
@@ -127,13 +127,24 @@ public class HongbaoService extends AccessibilityService {
         if (nodeInfo == null) return;
 
         /* 聊天会话窗口，遍历节点匹配“领取红包” */
-        List<AccessibilityNodeInfo> fetchNodes = nodeInfo.findAccessibilityNodeInfosByText("领取红包");
-
+        List<AccessibilityNodeInfo> fetchNodes=new ArrayList<>();
+        List<AccessibilityNodeInfo> fetchNodes1 = nodeInfo.findAccessibilityNodeInfosByText("领取红包");
+        List<AccessibilityNodeInfo> fetchNodes2 = nodeInfo.findAccessibilityNodeInfosByText("查看红包");
+        if(fetchNodes1!=null){
+            fetchNodes.addAll(fetchNodes1);
+        }
+        if(fetchNodes2!=null){
+            fetchNodes.addAll(fetchNodes2);
+        }
         if (fetchNodes.isEmpty()) return;
 
         for (AccessibilityNodeInfo cellNode : fetchNodes) {
+            if (!checkIsHongbaoNode(cellNode))
+                continue;
             String id = getHongbaoHash(cellNode);
-
+            if (id != null) {
+                Log.d("find hongbao", id);
+            }
             /* 如果节点没有被回收且该红包没有抢过 */
             if (id != null && !fetchedIdentifiers.contains(id)) {
                 nodesToFetch.add(cellNode);
@@ -142,6 +153,56 @@ public class HongbaoService extends AccessibilityService {
 
         // 调试信息，在每次fetch后打印出待抢红包
         // Log.d("toFetch", Arrays.toString(nodesToFetch.toArray()));
+    }
+
+
+    private boolean checkIsHongbaoNode(AccessibilityNodeInfo nodeInfo) {
+        try {
+            AccessibilityNodeInfo parent = nodeInfo.getParent();
+            for (int i = 0; i < parent.getChildCount(); i++) {
+                AccessibilityNodeInfo child = parent.getChild(i);
+                String title=child.getText().toString();
+                if (title!=null&&title.equals("微信红包")) {
+                    return true;
+                }
+
+            }
+        } catch (Exception e) {
+
+        }
+        Log.d("find fake hongbao", "111");
+        return false;
+
+    }
+    /**
+     * 获取当前聊天群的名称或者P2P聊天对方名称
+     * 用于表示一个唯一的红包
+     *
+     * @return 所在聊天名称
+     */
+    public String getGroupName() {
+        AccessibilityNodeInfo nodeInfo = this.getRootInActiveWindow();
+        try {
+            List<AccessibilityNodeInfo> fetchNodes = nodeInfo.findAccessibilityNodeInfosByText("返回");
+            if (fetchNodes.isEmpty()) {
+                return "";
+            }
+            for (AccessibilityNodeInfo cellNode : fetchNodes) {
+                if (cellNode.getContentDescription().equals("返回")) {
+
+                    AccessibilityNodeInfo parent = cellNode.getParent().getParent();
+                    AccessibilityNodeInfo group_name = parent.getChild(1);
+                    return group_name.getText().toString();
+
+
+                }
+            }
+        } catch (Exception e) {
+
+        }
+        return "";
+
+
     }
 
 
@@ -219,6 +280,20 @@ public class HongbaoService extends AccessibilityService {
         try {
             AccessibilityNodeInfo i = node.getParent().getChild(0);
             content = i.getText().toString();
+            AccessibilityNodeInfo parent_1 = node.getParent().getParent();
+
+            for (int index = 0; index < parent_1.getChildCount(); index++) {
+                AccessibilityNodeInfo child = parent_1.getChild(index);
+                if (child.getContentDescription() != null) {
+                    String sender = child.getContentDescription().toString();
+                    if (sender != null && sender.contains("头像")) {
+                        String groupName = getGroupName();
+                        content = content + groupName + sender;
+                        break;
+                    }
+                }
+            }
+
         } catch (NullPointerException npr) {
             return null;
         }
