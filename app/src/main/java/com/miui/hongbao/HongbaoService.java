@@ -23,6 +23,10 @@ public class HongbaoService extends AccessibilityService {
      * 已获取的红包队列
      */
     private List<String> fetchedIdentifiers = new ArrayList<>();
+
+    public void clearFechedList(){
+        fetchedIdentifiers.clear();
+    }
     /**
      * 待抢的红包队列
      */
@@ -65,27 +69,33 @@ public class HongbaoService extends AccessibilityService {
         switch (Stage.getInstance().getCurrentStage()) {
             case Stage.OPENING_STAGE:
                 // 调试信息，打印TTL
-                Log.d("TTL", String.valueOf(ttl));
-
+//                Log.d("STAGE", "Stage.OPENING_STAGE");
                 /* 如果打开红包失败且还没到达最大尝试次数，重试 */
-                if (openHongbao(nodeInfo) == -1 && ttl < MAX_TTL) return;
-
+                int result=openHongbao(nodeInfo);
+                if (result == -1 && ttl < MAX_TTL) return;
                 ttl = 0;
-                Stage.getInstance().entering(Stage.FETCHED_STAGE);
-                performMyGlobalAction(GLOBAL_ACTION_BACK);
+                if(result!=1){
+                    Stage.getInstance().entering(Stage.FETCHED_STAGE);
+                    performMyGlobalAction(GLOBAL_ACTION_BACK);
+                }
+
                 if (nodesToFetch.size() == 0) handleWindowChange(nodeInfo);
                 break;
             case Stage.OPENED_STAGE:
+//                Log.d("STAGE", "Stage.OPENED_STAGE");
+                Log.d("TTL", "进入红包详情");
                 List<AccessibilityNodeInfo> successNodes = nodeInfo.findAccessibilityNodeInfosByText("红包详情");
                 if (successNodes.isEmpty() && ttl < MAX_TTL) {
                     ttl += 1;
                     return;
                 }
                 ttl = 0;
+                Log.d("TTL", "进入红包详情成功");
                 Stage.getInstance().entering(Stage.FETCHED_STAGE);
                 performMyGlobalAction(GLOBAL_ACTION_BACK);
                 break;
             case Stage.FETCHED_STAGE:
+//                Log.d("STAGE", "Stage.FETCHED_STAGE");
                 /* 先消灭待抢红包队列中的红包 */
                 if (nodesToFetch.size() > 0) {
                     /* 从最下面的红包开始戳 */
@@ -102,6 +112,7 @@ public class HongbaoService extends AccessibilityService {
 
                         Stage.getInstance().entering(Stage.OPENING_STAGE);
                         node.getParent().performAction(AccessibilityNodeInfo.ACTION_CLICK);
+                        Log.d("OPENING_STAGE", id);
                     }
                     return;
                 }
@@ -142,9 +153,9 @@ public class HongbaoService extends AccessibilityService {
             if (!checkIsHongbaoNode(cellNode))
                 continue;
             String id = getHongbaoHash(cellNode);
-            if (id != null) {
-                Log.d("find hongbao", id);
-            }
+//            if (id != null) {
+//                Log.d("find hongbao", id);
+//            }
             /* 如果节点没有被回收且该红包没有抢过 */
             if (id != null && !fetchedIdentifiers.contains(id)) {
                 nodesToFetch.add(cellNode);
@@ -170,7 +181,6 @@ public class HongbaoService extends AccessibilityService {
         } catch (Exception e) {
 
         }
-        Log.d("find fake hongbao", "111");
         return false;
 
     }
@@ -231,17 +241,21 @@ public class HongbaoService extends AccessibilityService {
         failureNoticeNodes.addAll(nodeInfo.findAccessibilityNodeInfosByText("手慢了"));
         failureNoticeNodes.addAll(nodeInfo.findAccessibilityNodeInfosByText("过期"));
         if (!failureNoticeNodes.isEmpty()) {
+            Log.d("TTL", "没发现红包");
             return 0;
         }
 
         /* 戳开红包，红包还没抢完，遍历节点匹配“拆红包” */
         List<AccessibilityNodeInfo> successNoticeNodes = nodeInfo.findAccessibilityNodeInfosByText("拆红包");
         List<AccessibilityNodeInfo> preventNoticeNodes = nodeInfo.findAccessibilityNodeInfosByText("领取红包");
+
         if (!successNoticeNodes.isEmpty()) {
+            Log.d("TTL", "发现红包");
+
             AccessibilityNodeInfo openNode = successNoticeNodes.get(successNoticeNodes.size() - 1);
             Stage.getInstance().entering(Stage.OPENED_STAGE);
             openNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-            return 0;
+            return 1;
         } else {
             Stage.getInstance().entering(Stage.OPENING_STAGE);
             ttl += 1;
