@@ -246,15 +246,31 @@ public class HongbaoService extends AccessibilityService {
         }
 
         /* 戳开红包，红包还没抢完，遍历节点匹配“拆红包” */
-        List<AccessibilityNodeInfo> successNoticeNodes = nodeInfo.findAccessibilityNodeInfosByText("拆红包");
-        List<AccessibilityNodeInfo> preventNoticeNodes = nodeInfo.findAccessibilityNodeInfosByText("领取红包");
-
+        List<AccessibilityNodeInfo> successNoticeNodes_1 = nodeInfo
+                .findAccessibilityNodeInfosByText("发了一个红包，金额随机");
+        List<AccessibilityNodeInfo> successNoticeNodes_2 = nodeInfo
+                .findAccessibilityNodeInfosByText("给你发了一个红包");
+        List<AccessibilityNodeInfo> successNoticeNodes=new ArrayList<>();
+        if(successNoticeNodes_1!=null){
+            successNoticeNodes.addAll(successNoticeNodes_1);
+        }
+        if(successNoticeNodes_2!=null){
+            successNoticeNodes.addAll(successNoticeNodes_2);
+        }
         if (!successNoticeNodes.isEmpty()) {
             Log.d("TTL", "发现红包");
 
             AccessibilityNodeInfo openNode = successNoticeNodes.get(successNoticeNodes.size() - 1);
             Stage.getInstance().entering(Stage.OPENED_STAGE);
-            openNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
+            AccessibilityNodeInfo parent_1= openNode.getParent();
+//            for(int i=0;i<parent_1.getChildCount();i++){
+//                AccessibilityNodeInfo ch= parent_1.getChild(i);
+//                int count=ch.getChildCount();
+//            }
+
+
+            openNode.getParent().getChild(3).performAction(AccessibilityNodeInfo
+                    .ACTION_CLICK);
             return 1;
         } else {
             Stage.getInstance().entering(Stage.OPENING_STAGE);
@@ -277,8 +293,8 @@ public class HongbaoService extends AccessibilityService {
 
         // AccessibilityNodeInfo必然有且只有一次匹配，因此不再作判断
         objHashMatcher.find();
-
         return objHashMatcher.group(0);
+
     }
 
     /**
