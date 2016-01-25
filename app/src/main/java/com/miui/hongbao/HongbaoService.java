@@ -2,7 +2,10 @@ package com.miui.hongbao;
 
 import android.accessibilityservice.AccessibilityService;
 import android.annotation.TargetApi;
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.os.Build;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
@@ -55,8 +58,8 @@ public class HongbaoService extends AccessibilityService {
         if (Stage.getInstance().mutex) return;
 
         Stage.getInstance().mutex = true;
-
         try {
+            watchNotifications(event);
             handleWindowChange(event.getSource());
         } finally {
             Stage.getInstance().mutex = false;
@@ -340,5 +343,25 @@ public class HongbaoService extends AccessibilityService {
     public void performMyGlobalAction(int action) {
         Stage.getInstance().mutex = false;
         performGlobalAction(action);
+    }
+
+    private boolean watchNotifications(AccessibilityEvent event) {
+        // Not a notification
+        if (event.getEventType() != AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED) return false;
+
+        // Not a hongbao
+        String tip = event.getText().toString();
+        if (!tip.contains("[微信红包]")) return true;
+
+        Parcelable parcelable = event.getParcelableData();
+        if (parcelable instanceof Notification) {
+            Notification notification = (Notification) parcelable;
+            try {
+                notification.contentIntent.send();
+            } catch (PendingIntent.CanceledException e) {
+                e.printStackTrace();
+            }
+        }
+        return true;
     }
 }
