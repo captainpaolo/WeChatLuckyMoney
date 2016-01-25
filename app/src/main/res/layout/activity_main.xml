@@ -14,32 +14,34 @@
             android:id="@+id/imageView" android:src="@mipmap/github"
             android:scaleType="centerInside"
             android:layout_above="@+id/textView3"
-            android:layout_centerHorizontal="true" android:onClick="openGithub" android:clickable="true"/>
+            android:layout_centerHorizontal="true"  android:clickable="true"/>
     <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textAppearance="@android:style/TextAppearance.DeviceDefault.Medium"
-            android:text="captainpaolo - 修改版"
+            android:text="恭喜发财,大吉大利"
+            android:textSize="24dip"
+            android:textColor="#e53935"
             android:id="@+id/textView3"
-            android:layout_centerVertical="true" android:gravity="center" android:onClick="openGithub"
+            android:layout_centerVertical="true" android:gravity="center"
             android:clickable="true"/>
         <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textAppearance="?android:attr/textAppearanceSmall"
-                android:text="去Github关注项目进展"
+                android:text="少壮不努力,老大抢不到红包"
                 android:id="@+id/textView2" android:layout_below="@+id/textView3"
-                android:layout_centerHorizontal="true" android:clickable="true" android:onClick="openGithub"
+                android:layout_centerHorizontal="true" android:clickable="true"
                 android:layout_marginTop="3dp"/>
         <TextView
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:text="https://github.com/captainpaolo/WeChatLuckyMoney"
+            android:text="本插件仅供学习研究"
             android:id="@+id/github" android:gravity="center_horizontal"
-            android:layout_centerHorizontal="true" android:layout_alignParentStart="false"
+            android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true" android:layout_marginBottom="20dp" android:layout_marginTop="15dp"
-            android:textColor="#2196f3" android:clickable="true" android:onClick="openGithub"/>
+            android:textColor="#2196f3" android:clickable="true"/>
     <Button
             android:id="@+id/button_accessible"
             android:text="@string/service_name"
